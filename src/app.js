@@ -1,15 +1,23 @@
 const express = require('express');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 const app = express();
-const router = express.Router();
 
-const route = router.get('/', (req, res, next) => {
-    res.status(200).send({
-        title: 'Node Store API',
-        version: "0.0.2"
-    });
-});
+//Conecta no Banco
+mongoose.connect('mongodb+srv://admin:balta123@principal.fuhvy.gcp.mongodb.net/balta?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, });
 
-app.use('/', route);
+//Carrega os Models
+const Product = require('./models/product');
+
+//Carrega as Rotas
+const index = require('./Routes/index');
+const products = require('./Routes/product');
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+
+app.use('/', index);
+app.use('/products', products);
 
 module.exports = app;
