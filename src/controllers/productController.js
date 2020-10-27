@@ -2,9 +2,11 @@
 
 const mongoose = require('mongoose');
 const Product = mongoose.model('Product');
+const ValidationContract = require('../validators/fluent-validator');
+const repository = require('../repositories/product-repository');
 
 exports.get = (req, res, next) => {
-    Product.find({ active: true }, 'title price slug')
+    repository.get()
         .then(data => {
             res.status(200).send(data);
         })
@@ -14,7 +16,7 @@ exports.get = (req, res, next) => {
 };
 
 exports.getBySlug = (req, res, next) => {
-    Product.findOne({ slug: req.params.slug, active: true }, 'title description price slug tags')
+    repository.getBySlug(req.params.slug)
         .then(data => {
             res.status(200).send(data);
         })
@@ -24,7 +26,7 @@ exports.getBySlug = (req, res, next) => {
 };
 
 exports.getById = (req, res, next) => {
-    Product.findById(req.params.id)
+    repository.getById(req.params.id)
         .then(data => {
             res.status(200).send(data);
         })
@@ -34,7 +36,7 @@ exports.getById = (req, res, next) => {
 };
 
 exports.getByTag = (req, res, next) => {
-    Product.find({ tags: req.params.tag, active: true }, 'title description price slug tags')
+    repository.getByTag(req.params.tag)
         .then(data => {
             res.status(200).send(data);
         })
@@ -44,23 +46,48 @@ exports.getByTag = (req, res, next) => {
 };
 
 exports.post = (req, res, next) => {
-    var product = new Product(req.body);
-    product.save()
+    let contract = new ValidationContract();
+    contract.hasMinLen(req.body.title, 3, 'O titulo deve ter pelo menos 3 caracteres');
+    contract.hasMinLen(req.body.slug, 3, 'O slug deve ter pelo menos 3 caracteres');
+    contract.hasMinLen(req.body.description, 3, 'O description deve ter pelo menos 3 caracteres');
+
+    if (!contract.isValid()) {
+        res.status(400).send(contract.errors()).end();
+        return;
+    }
+
+    repository.create(req.body)
         .then(x => {
             res.status(201).send({ message: 'Produto Cadastrado com sucesso!', data: product });
         })
         .catch(e => {
-            res.status(400).send({ message: 'Falha ao cadastrar produto!', data: e });
+            res.status(500).send({ message: 'Falha ao cadastrar produto!', data: e });
         });
 
 };
 
 exports.put = (req, res, next) => {
-    const id = req.params.id;
-    res.status(200).send({ id: id, item: req.body });
+    repository.update(req.params.id, req.body)
+        .then(x => {
+            res.status(200).send({ message: "Produto atualizado com sucesso!" });
+        })
+        .catch(e => {
+            res.status(400).send({
+                message: "erro ao atualizar produto",
+                data: e
+            })
+        });
 };
 
 exports.delete = (req, res, next) => {
-    const id = req.params.id;
-    res.status(200).send({ id: id, item: req.body });
+    repository.delete(req.body.id)
+        .then(x => {
+            res.status(200).send({ message: "Produto removido com sucesso!" });
+        })
+        .catch(e => {
+            res.status(400).send({
+                message: "erro ao remover produto",
+                data: e
+            })
+        });
 };
