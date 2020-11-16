@@ -1,11 +1,12 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const config = require('./config');
 
 const app = express();
 
 //Conecta no Banco
-mongoose.connect('mongodb+srv://admin:balta123@principal.fuhvy.gcp.mongodb.net/balta?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, });
+mongoose.connect(config.connectionString, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, });
 
 //Carrega os Models
 const Product = require('./models/product');
